@@ -1,0 +1,104 @@
+:root {
+    --r-main-font: 'Roboto', 'Noto Color Emoji', sans-serif;
+    --r-heading-font: 'Roboto', 'Noto Color Emoji', sans-serif;
+    --r-code-font: 'Roboto Mono', 'Noto Color Emoji', monospace;
+    --r-block-margin: 10px;
+    --r-background-color: #4F5B93;
+    --r-main-font-size: 40px;
+    --r-main-color: white;
+    --r-link-color: var(--r-main-color);
+    --r-link-color-dark: var(--r-main-color);
+    --r-link-color-hover: lightgrey;
+    --r-heading-color: var(--r-main-color);
+    --r-heading-margin: 0 0 40px 0;
+    --r-heading4-size: 1.1em;
+
+    /*--r-background-color: #fff;
+    --r-main-font: Lato, sans-serif;
+    --r-main-font-size: 40px;
+    --r-main-color: #000;
+    --r-block-margin: 20px;
+    --r-heading-margin: 0 0 20px 0;
+    --r-heading-font: News Cycle, Impact, sans-serif;
+    --r-heading-color: #000;
+    --r-heading-line-height: 1.2;
+    --r-heading-letter-spacing: normal;
+    --r-heading-text-transform: none;
+    --r-heading-text-shadow: none;
+    --r-heading-font-weight: normal;
+    --r-heading1-text-shadow: none;
+    --r-heading1-size: 3.77em;
+    --r-heading2-size: 2.11em;
+    --r-heading3-size: 1.55em;
+    --r-heading4-size: 1em;
+    --r-code-font: monospace;
+    --r-link-color: #00008B;
+    --r-link-color-dark: #00003f;
+    --r-link-color-hover: #0000f1;
+    --r-selection-background-color: rgba(0, 0, 0, 0.99);
+    --r-selection-color: #fff;*/
+}
+
+.reveal pre {
+    font-size: .50em;
+}
+
+.nohighlight {
+    padding: 1em !important;
+}
+
+.reveal .hljs {
+    min-height: auto;
+}
+
+td.hljs-ln-code {
+    white-space: pre;
+}
+
+/*.reveal h1, .reveal h2, .reveal h3, .reveal h4, .reveal h5, .reveal h6, .reveal pre, .reveal p, .reveal img {
+    margin: 0 var(--r-block-margin) calc(var(--r-block-margin) * 2);
+}*/
+
+.reveal pre {
+    width: auto;
+}
+
+.reveal pre code {
+    max-height: none;
+}
+
+.reveal .r-stack > * {
+    margin: 0;
+}
+
+.horizontal {
+    display: flex;
+    width: 100%;
+    justify-content: space-between;
+}
+
+.horizontal > * {
+    flex-grow: 1;
+}
+
+.horizontal-half > * {
+    flex-grow: 0 !important;
+    width: calc(50% - var(--r-block-margin) * 2) !important;
+}
+
+.rfc {
+    margin-top: 30px !important;
+    font-size: 25px;
+}
+
+.reveal a {
+    text-decoration: underline;
+    text-underline-offset: 5px;
+    text-decoration-thickness: 8%;
+}
+
+.links li {
+    font-size: 30px;
+    margin-bottom: 10px;
+    list-style: none;
+}

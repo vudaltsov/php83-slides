@@ -1,0 +1,506 @@
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.6.1/reset.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.6.1/reveal.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.6.1/theme/simple.min.css" id="theme">
+    <link rel="stylesheet" href="highlight-phpstorm-light-theme.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Color+Emoji&family=Roboto+Mono&family=Roboto:wght@400;700&display=swap">
+    <link rel="stylesheet" href="style.css">
+    <title>PHP 8.3 </title>
+</head>
+<body>
+<div class="reveal">
+    <div class="slides">
+        <section>
+            <img src="php83.svg" alt="PHP 8.3" style="width: 70%">
+        </section>
+
+        <section>
+            <h4>История констант классов</h4>
+            <img src="class_constants_timeline.png" alt="Таймлайн развития констант классов">
+        </section>
+
+        <section>
+            <h4>Переопределение констант до PHP 8.3</h4>
+            <pre>
+                <code class="language-php" data-trim data-line-numbers>
+                    // PHP < 8.3
+
+                    namespace Symfony\Component\HttpKernel;
+
+                    interface HttpKernelInterface
+                    {
+                        public const MAIN_REQUEST = 1;
+                    }
+
+                    interface MessedUpKernel extends HttpKernelInterface
+                    {
+                                                    ✅😢
+                        public const MAIN_REQUEST = [];
+                    }
+                </code>
+            </pre>
+        </section>
+
+        <section>
+            <h4>Типизированные константы в PHP 8.3</h4>
+            <pre>
+                <code class="language-php" data-trim data-line-numbers>
+                    // PHP >= 8.3
+
+                    namespace Symfony\Component\HttpKernel;
+
+                    interface HttpKernelInterface
+                    {
+                        public const int MAIN_REQUEST = 1;
+                    }
+
+                    interface MessedUpKernel extends HttpKernelInterface
+                    {
+                                                    ❌😊
+                        public const MAIN_REQUEST = [];
+                    }
+
+                    $reflClass = new ReflectionClass(HttpKernelInterface::class);
+                    $reflClass->getReflectionConstant('MAIN_REQUEST')->getType();
+                </code>
+            </pre>
+            <p class="rfc"><a href="https://wiki.php.net/rfc/typed_class_constants">RFC</a></p>
+        </section>
+
+        <section>
+            <h4>Что можно получить динамически?</h4>
+            <pre>
+                <code class="language-php" data-trim data-line-numbers>
+                    // переменные
+                    $$variableName
+
+                    // свойства
+                    $object->$propertyName
+                    MyClass::${$staticPropertyName}
+
+                    // методы
+                    $object->{$methodName}()
+                    MyClass::{$staticMethodName}()
+
+                    // классы в статических вызовах
+                    $className::$staticProperty
+                    $className::staticMethod()
+
+                    // константы класса???
+                </code>
+            </pre>
+        </section>
+
+        <section>
+            <h4>Динамический доступ <br> к константам класса в PHP 8.3</h4>
+            <pre>
+                <code class="language-php" data-trim data-line-numbers>
+                    enum AwesomeLanguages
+                    {
+                        case PHP;
+                    }
+
+                    $constantName = 'PHP';
+
+                    // PHP < 8.3
+                    constant(AwesomeLanguages::class . "::{$constantName}");
+
+                    // PHP >= 8.3
+                    AwesomeLanguages::{$constantName};
+                </code>
+            </pre>
+            <p class="rfc"><a href="https://wiki.php.net/rfc/dynamic_class_constant_fetch">RFC</a></p>
+        </section>
+
+        <section>
+            <h4>Произвольные инициализаторы статических переменных</h4>
+            <pre>
+                <code class="language-php" data-trim data-line-numbers>
+                    // PHP < 8.3
+                    function x(): void
+                    {
+                                                 ❌🤔
+                        static $staticVariable = [new SplFileInfo(__FILE__)];
+                    }
+
+                    // PHP >= 8.3
+                    function x(): void
+                    {
+                                                 ✅😊
+                        static $staticVariable = [new SplFileInfo(__FILE__)];
+                    }
+                </code>
+            </pre>
+            <p class="rfc"><a href="https://wiki.php.net/rfc/arbitrary_static_variable_initializers">RFC</a></p>
+        </section>
+
+        <section>
+            <h4>Переопределение методов до PHP 8.3</h4>
+            <pre>
+                <code class="language-php" data-trim data-line-numbers>
+                    // PHP < 8.3
+
+                    use PHPUnit\Framework\TestCase;
+                    use Symfony\Component\Filesystem\Filesystem;
+
+                    final class MyTest extends TestCase
+                    {
+                                           ✅😢
+                        protected function taerDown(): void
+                        {
+                            (new Filesystem())->remove(__DIR__ . '/generated');
+                        }
+                    }
+                </code>
+            </pre>
+        </section>
+
+        <section>
+            <h4>Атрибут #[Override] в PHP 8.3</h4>
+            <pre>
+                <code class="language-php" data-trim data-line-numbers>
+                    // PHP >= 8.3
+
+                    use PHPUnit\Framework\TestCase;
+                    use Symfony\Component\Filesystem\Filesystem;
+
+                    final class MyTest extends TestCase
+                    {
+                        #[Override]        ❌😊
+                        protected function taerDown(): void
+                        {
+                            (new Filesystem())->remove(__DIR__ . '/generated');
+                        }
+                    }
+                </code>
+            </pre>
+            <p class="rfc"><a href="https://wiki.php.net/rfc/marking_overriden_methods">RFC</a></p>
+        </section>
+
+        <section>
+            <h4>Глубокое клонирование <br> readonly свойств до PHP 8.3</h4>
+            <pre>
+                <code class="language-php" data-trim data-line-numbers>
+                    // PHP < 8.3
+
+                    final readonly class PhpRelease
+                    {
+                        public function __construct(
+                            public string $version,
+                            public string $manager,
+                            public DateTime $date,
+                        ) {}
+
+                        public function __clone(): void
+                        {
+                                        ❌
+                            $this->date = clone $this->date;
+                        }
+                    }
+                </code>
+            </pre>
+        </section>
+
+        <section>
+            <h4>Глубокое клонирование <br> readonly свойств в PHP 8.3</h4>
+            <pre>
+                <code class="language-php" data-trim data-line-numbers>
+                    // PHP >= 8.3
+
+                    final readonly class PhpRelease
+                    {
+                        public function __construct(
+                            public string $version,
+                            public string $manager,
+                            public DateTime $date,
+                        ) {}
+
+                        public function __clone(): void
+                        {
+                                        ✅
+                            $this->date = clone $this->date;
+                        }
+                    }
+                </code>
+            </pre>
+            <p class="rfc"><a href="https://wiki.php.net/rfc/readonly_amendments">RFC</a></p>
+        </section>
+
+        <section>
+            <h4>Хотелка: клонирование <br> с частичным переопределением</h4>
+            <pre>
+                <code class="language-php" data-trim data-line-numbers>
+                    // PHP 8.4 🙏
+
+                    final readonly class PhpRelease
+                    {
+                        public function __construct(
+                            public string $version,
+                            public string $manager,
+                            public DateTime $date,
+                        ) {}
+
+                        public function withDate(DateTime $date): self
+                        {
+                            return clone $this with {
+                                date: $date,
+                            };
+                        }
+                    }
+                </code>
+            </pre>
+            <p class="rfc"><a href="https://wiki.php.net/rfc/clone_with">RFC</a></p>
+        </section>
+
+        <section>
+            <h4>Валидация JSON до PHP 8.3</h4>
+            <pre>
+                <code class="language-php" data-trim data-line-numbers>
+                    // PHP < 8.3
+
+                    function json_validate(string $string): bool
+                    {
+                        json_decode($string);
+
+                        return json_last_error() === JSON_ERROR_NONE;
+                    }
+                </code>
+            </pre>
+            <pre class="fragment">
+                <code class="language-php" data-trim data-line-numbers>
+                    // PHP < 8.3
+
+                    function json_validate(string $string): bool
+                    {
+                        try {
+                            json_decode($string, flags: JSON_THROW_ON_ERROR);
+
+                            return true;
+                        } catch (JsonException) {
+                            return false;
+                        }
+                    }
+                </code>
+            </pre>
+        </section>
+
+        <section>
+            <h4>Новая функция json_validate() в PHP 8.3</h4>
+            <pre>
+                <code class="language-php" data-trim data-line-numbers>
+                    // PHP >= 8.3
+
+                    json_validate('{"Hello": "World!"}'); // true
+
+                    json_validate('{"Hello": }'); // false
+                </code>
+            </pre>
+            <p class="rfc">
+                <a href="https://wiki.php.net/rfc/json_validate">RFC</a>
+                | <a href="https://www.php.net/manual/en/function.json-validate.php">Документация</a>
+                | <a href="https://github.com/symfony/polyfill-php83">Symfony полифил</a>
+            </p>
+        </section>
+
+        <section>
+            <h4>Какой ключ будет у второго элемента?</h4>
+            <pre>
+                <code class="language-php" data-trim data-line-numbers>
+                    $array = [];
+
+                    $array[-5] = 'b';
+                    $array[] = 'c';
+
+                    var_dump($array);
+                </code>
+            </pre>
+            <pre class="fragment">
+                <code class="language-php" data-trim data-line-numbers>
+                    // PHP < 8.3
+                    array(2) {
+                      [-5] => string(1) "b"
+                      [0] => string(1) "c"
+                    }
+
+                    // PHP >= 8.3
+                    array(2) {
+                      [-5] => string(1) "b"
+                      [-4] => string(1) "c"
+                    }
+                </code>
+            </pre>
+        </section>
+
+        <section>
+            <h4>Какие ключи будут в массиве?</h4>
+            <pre>
+                <code class="language-php" data-trim data-line-numbers>
+                    $array = [];
+
+                    $array[] = 'a';
+                    $array[-5] = 'b';
+                    $array[] = 'c';
+                    $array[5] = 'd';
+                    $array[] = 'e';
+
+                    var_dump($array);
+                </code>
+            </pre>
+            <pre class="fragment">
+                <code class="language-php" data-trim data-line-numbers>
+                    // PHP < 8.3 && >= 8.3
+                    array(5) {
+                      [0] => string(1) "a"
+                      [-5] => string(1) "b"
+                      [1] => string(1) "c"
+                      [5] => string(1) "d"
+                      [6] => string(1) "e"
+                    }
+                </code>
+            </pre>
+        </section>
+
+        <section>
+            <h4>Обновление Randomizer в PHP 8.3</h4>
+            <pre>
+                <code class="language-php" data-trim data-line-numbers>
+                    $randomizer = new Random\Randomizer();
+
+                    echo $randomizer->nextFloat(); // 0.57721566490153 🤔
+
+                    echo $randomizer->getFloat(-M_E, M_PI); // 2.1484303282097
+
+                    echo $dogName = $randomizer->getBytesFromString('My', 4); // MyMy
+                </code>
+            </pre>
+            <p class="rfc">
+                <a href="https://wiki.php.net/rfc/randomizer_additions">RFC</a>
+                | <a href="https://www.php.net/manual/ru/class.random-randomizer.php">Документация</a>
+            </p>
+        </section>
+
+        <section>
+            <h4>Что ещё почитать и посмотреть</h4>
+            <ul class="links">
+                <li>📰 <a href="https://www.php.net/releases/8.3/ru.php">PHP 8.3.0 Release Announcement</a></li>
+                <li>📰 <a href="https://stitcher.io/blog/new-in-php-83">Stitcher.io</a></li>
+                <li>📰 <a href="https://php.watch/versions/8.3">PHP.Watch</a></li>
+                <li>📰 <a href="https://sergeymukhin.com/blog/chto-novogo-v-php-83">Что нового в PHP 8.3 (Сергей Мухин)</a></li>
+                <li>▶️ <a href="https://www.youtube.com/watch?v=nJFsD0bnlTI">What's new in PHP 8.3 (PHP Annotated)</a></li>
+                <li>▶️ <a href="https://www.youtube.com/watch?v=VWryF035B6U">Celebrating PHP 8.3 🥳 (PHP Annotated)</a></li>
+                <li>▶️ <a href="https://www.youtube.com/watch?v=mGf_ShkSdmE">Breaking changes in PHP 8.3! (PHP Annotated)</a></li>
+                <li>▶️ <a href="https://www.youtube.com/watch?v=jc8GRRx91M0">Обновление PHP 8.3. Обзор нововведений (CutCode)</a></li>
+            </ul>
+        </section>
+
+        <section>
+            <h4>Краткая инструкция по обновлению</h4>
+            <pre>
+                <code class="language-shell" data-trim data-line-numbers>
+                    composer why-not php '^8.3'
+                </code>
+            </pre>
+            <pre class="fragment">
+                <code class="language-shell" data-trim data-line-numbers>
+                    composer require php '^8.3'
+                </code>
+            </pre>
+        </section>
+
+        <section>
+            <h4>Не забываем про Rector!</h4>
+            <pre>
+                <code class="language-shell" data-trim data-line-numbers>
+                    composer require --dev rector/rector
+                </code>
+            </pre>
+            <pre class="fragment">
+                <code class="language-php" data-trim data-line-numbers>
+                    // rector.php
+
+                    return static function (RectorConfig $rectorConfig): void {
+                        $rectorConfig->parallel();
+                        $rectorConfig->paths([
+                            __DIR__ . '/src',
+                            __DIR__ . '/tests',
+                        ]);
+                        $rectorConfig->sets([
+                            LevelSetList::UP_TO_PHP_83, ✅
+                        ]);
+                    };
+                </code>
+            </pre>
+            <pre class="fragment">
+                <code class="language-shell" data-trim data-line-numbers>
+                    php vendor/bin/rector process
+                </code>
+            </pre>
+        </section>
+
+        <section>
+            <h2>Прогресс или стагнация?</h2>
+        </section>
+
+        <section>
+            <table style="color: white; font-size: 16px;">
+                <tr><td>4.0.0</td><td>2000, May</td><td>Zend Engine</td></tr>
+                <tr><td>4.1.0</td><td>2001, December</td><td>Производительность, улучшена подд. Windows</td></tr>
+                <tr><td>4.2.0</td><td>2002, April</td><td>Суперглобальные переменные</td></tr>
+                <tr><td>4.3.0</td><td>2002, December</td><td>CLI, Streams API</td></tr>
+                <tr><td>4.4.0</td><td>2005, July</td><td>Maintenance release</td></tr>
+                <tr><td>5.0.0</td><td>2004, July</td><td>Zend Engine 2, ООП, SimpleXML, SOAP, MySQLi, SQLite</td></tr>
+                <tr><td>5.1.0</td><td>2005, November</td><td>Переписана обработка дат, производительность</td></tr>
+                <tr><td>5.2.0</td><td>2006, November</td><td>Улучшена работа с памятью, JSON, ZIP, обработка загруженных файлов</td></tr>
+                <tr><td>5.3.0</td><td>2009, June</td><td>Неймспейсы, LSB, замыкания, goto</td></tr>
+                <tr><td>5.4.0</td><td>2012, February</td><td>Трейты, [], встроенный сервер</td></tr>
+                <tr><td>5.5.0</td><td>2013, June</td><td>Генераторы, finally, ::class, OPcache</td></tr>
+                <tr><td>5.6.0</td><td>2014, August</td><td>Оператор ..., распаковка массивов, импорт функций</td></tr>
+                <tr><td>7.0.0</td><td>2015, December</td><td>Zend Engine 3, скалярные и возвр. типы, ??, <=>, анонимные классы</td></tr>
+                <tr><td>7.1.0</td><td>2016, November</td><td>Nullable типы, видимость констант, void, iterable</td></tr>
+                <tr><td>7.2.0</td><td>2017, November</td><td>Тип object, Sodium</td></tr>
+                <tr><td>7.3.0</td><td>2018, December</td><td>Гибкий heredoc, конечная запятая в вызовах, улучшен GC</td></tr>
+                <tr><td>7.4.0</td><td>2019, November</td><td>Типизация свойств, стрелочные ф-ции, ??=, preloading, FFI</td></tr>
+                <tr><td>8.0.0</td><td>2020, November</td><td>Named аргументы, #[Attribute], promoted св-ва, |-типы, match, JIT</td></tr>
+                <tr><td>8.1.0</td><td>2021, November</td><td>Enum, Fiber, (...), &-типы, never, readonly, new в инициализаторах</td></tr>
+                <tr><td>8.2.0</td><td>2022, December</td><td>#[SensitiveParameter], null, false типы, readonly классы</td></tr>
+                <tr><td>8.3.0</td><td>2023, November</td><td>Типы констант классов, #[Override], глубокое клонирование readonly</td></tr>
+            </table>
+        </section>
+
+        <section>
+            <img src="php_updated_files_graph.png" alt="">
+        </section>
+
+        <section>
+            <img src="php_added_lines_graph.png" alt="">
+        </section>
+
+        <section>
+            <img src="php_deleted_lines_graph.png" alt="">
+        </section>
+
+        <section>
+            <h4>Всех с релизом 🎉</h4>
+            <img src="php_cannot_die.jpg" alt="PHP cannot die!" style="margin: 10px 0 40px; width: 70%; ">
+            <p style="font-size: 30px;"><a href="https://t.me/vudaltsov">@vudaltsov</a> / <a href="https://t.me/phpyh">Пых</a> / <a href="https://youtube.com/@PHPPoint">PHP Point</a></p>
+        </section>
+    </div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.6.1/reveal.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.6.1/plugin/highlight/highlight.min.js"></script>
+<script>
+    Reveal.initialize({
+        controls: true,
+        progress: true,
+        history: true,
+        plugins: [RevealHighlight],
+        slideNumber: true,
+        autoAnimate: true,
+    });
+</script>
+</body>
+</html>
